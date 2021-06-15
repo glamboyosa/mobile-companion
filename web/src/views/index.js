@@ -1,4 +1,4 @@
-import { form, main } from '../helpers/variables/index'
+import { form, main } from '../helpers/variables'
 
 const clearForm = () => form.parentElement.removeChild(form)
 
