@@ -4,10 +4,44 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="styles/style.css" />
+    <link rel="stylesheet" href="styles/styles.css" />
     <title>Mobile Companion</title>
   </head>
   <body>
+    <main class="box">
+      <form class="form">
+        <h1 class="heading">Sign In 🚀</h1>
+        <input type="tel" class="input" placeholder="Phone Number" />
+        <button type="submit" class="submit-button">
+          <span>Sign In</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            xmlns:xlink="http://www.w3.org/1999/xlink"
+            style="display: none; shape-rendering: auto"
+            width="5rem"
+            height="5rem"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="xMidYMid"
+            class="loader"
+          >
+            <path
+              d="M10 50A40 40 0 0 0 90 50A40 42 0 0 1 10 50"
+              fill="#1d3f72"
+              stroke="none"
+            >
+              <animateTransform
+                attributeName="transform"
+                type="rotate"
+                dur="1s"
+                repeatCount="indefinite"
+                keyTimes="0;1"
+                values="0 50 51;360 50 51"
+              ></animateTransform>
+            </path>
+          </svg>
+        </button>
+      </form>
+    </main>
     <script src="src/index.js"></script>
   </body>
 </html>
