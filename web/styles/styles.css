@@ -28,23 +28,25 @@ body {
 }
 .box {
   width: 50%;
+  background-color: var(--white);
+  box-shadow: 0 1.8px 1.8px 1.8px var(--black);
+  border-radius: 3px;
 }
+.home,
 .form {
   display: flex;
-  border-radius: 3px;
   flex-direction: column;
-  background-color: var(--white);
   justify-content: center;
   align-items: center;
-  box-shadow: 0 1.8px 1.8px 1.8px var(--black);
   padding: 1rem 3rem;
   width: 100%;
   height: 70vh;
 }
+
 .heading {
   font-size: 4rem;
   font-weight: bold;
-  margin-bottom: 1rem;
+  margin-bottom: 2rem;
 }
 .input {
   padding: 1rem 3rem;
@@ -66,7 +68,11 @@ body {
   font-family: inherit;
   width: auto;
 }
+span:not(:first-of-type) {
+  font-size: 7rem;
+}
 @media only screen and (max-width: 600px) {
+  .home,
   .form {
     width: 80%;
     height: auto;
