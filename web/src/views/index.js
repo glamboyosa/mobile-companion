@@ -5,7 +5,7 @@ const clearForm = () => form.parentElement.removeChild(form)
 const successUI = () => {
   const markup = `
     <div class="home">
-    <span>🏡</span>
+    <span class="home-icon">🏡</span>
     <h1 class="heading">Successfully signed in</h1>
   </div>
     `

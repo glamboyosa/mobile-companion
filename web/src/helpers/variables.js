@@ -6,4 +6,6 @@ const submitHandler = document.querySelector('.submit-button')
 
 const loader = document.querySelector('.loader')
 
-export { form, main, submitHandler, loader }
+const input = document.querySelector('.input')
+
+export { form, main, submitHandler, loader, input }

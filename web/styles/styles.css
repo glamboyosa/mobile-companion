@@ -68,13 +68,17 @@ body {
   font-family: inherit;
   width: auto;
 }
-span:not(:first-of-type) {
+.home-icon {
   font-size: 7rem;
+  cursor: pointer;
 }
 @media only screen and (max-width: 600px) {
+  .box {
+    width: 80%;
+  }
   .home,
   .form {
-    width: 80%;
+    width: 100%;
     height: auto;
   }
   .heading {
