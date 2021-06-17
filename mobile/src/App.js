@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
 import {
   ActivityIndicator,
@@ -12,10 +12,44 @@ import {
   View,
 } from 'react-native'
 
+import AsyncStorage from '@react-native-async-storage/async-storage'
+
+import messaging from '@react-native-firebase/messaging'
 const App = () => {
+  const baseURL = ''
   const [phoneNumber, setPhoneNumber] = useState('')
   const [loading, setLoading] = useState(false)
 
+  // this function checks if we've stored the Device registration token in async storage and sends it to the server if we don't have.
+  const getFCMDeviceToken = async (token = null) => {
+    const registrationToken = await AsyncStorage.getItem('FCMDeviceToken')
+    if (!registrationToken && !token) {
+      const registrationToken = await messaging().getToken()
+      const body = { registrationToken }
+      const response = await fetch(`${baseURL}/api/token`, {
+        method: 'POST',
+        body: JSON.stringify(body),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      // if something went wrong, inform the user
+      !response.ok() &&
+        Alert.alert('Something went wrong.', 'Please relaunch app.', [
+          {
+            text: 'Close',
+            onPress: () => console.log('Alert closed'),
+          },
+        ])
+    }
+  }
+  useEffect(() => {
+    getFCMDeviceToken()
+    return () =>
+      messaging().onTokenRefresh((token) => {
+        getFCMDeviceToken(token)
+      })
+  }, [])
   const signInHandler = async () => {}
   return (
     <View style={styles.container}>

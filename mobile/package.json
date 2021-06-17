@@ -10,6 +10,9 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^1.15.5",
+    "@react-native-firebase/app": "^12.1.0",
+    "@react-native-firebase/messaging": "^12.1.0",
     "@tru_id/tru-sdk-react-native": "^0.3.0",
     "react": "17.0.1",
     "react-native": "0.64.2"

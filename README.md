@@ -3,8 +3,9 @@
 ## Requirements
 
 - A mobile phone with a SIM card and mobile data connection
-- [Node.js](https://nodejs.org)
-- Other requirements
+- [Node.js](https://nodejs.org) > 10
+- A [Firebase Account](https://firebase.google.com/console)
+- For metro bundler, require node version > 10
 
 ## Getting Started
 

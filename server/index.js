@@ -1,5 +1,8 @@
 const express = require('express')
 const cors = require('cors')
+// firebase
+const admin = require('firebase-admin')
+// helpers
 const { createAccessToken } = require('./helpers/createAccessToken')
 const { createPhoneCheck } = require('./helpers/createPhoneCheck')
 const { getPhoneCheck } = require('./helpers/getPhoneCheckResult')
@@ -8,7 +11,10 @@ const app = express()
 
 app.use(express.json())
 app.use(cors())
-
+// initialize Firebase Admin SDK 
+admin.initializeApp({
+  credential: admin.credential.applicationDefault(),
+})
 // create PhoneCheck
 app.post('/api/phone-check', async (req, res) => {
   const { phone_number: phoneNumber } = req.body

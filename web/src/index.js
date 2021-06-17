@@ -2,7 +2,7 @@ import 'regenerator-runtime/runtime'
 
 import { form, input } from './helpers/variables'
 
-import {toggleLoading} from './helpers/loader'
+import { toggleLoading } from './helpers/loader'
 
 import { clearForm, successUI } from './views/index'
 
@@ -15,7 +15,7 @@ form.addEventListener('submit', async (e) => {
   e.preventDefault()
 
   toggleLoading(true)
-  
+
   const body = { phone_number: input.value }
   try {
     await fetch('', {
@@ -27,11 +27,12 @@ form.addEventListener('submit', async (e) => {
   } catch (e) {
     Toastify({
       text: `${e.message}`,
-      duration: 3000,
+      duration: 12000,
       close: true,
+      className: 'toast',
+      backgroundColor: '#f00',
       gravity: 'top', // `top` or `bottom`
       position: 'center', // `left`, `center` or `right`
-      backgroundColor: '#f00',
       stopOnFocus: true, // Prevents dismissing of toast on hover
       onClick: function () {}, // Callback after click
     }).showToast()
