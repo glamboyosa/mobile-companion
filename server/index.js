@@ -6,14 +6,34 @@ const admin = require('firebase-admin')
 const { createAccessToken } = require('./helpers/createAccessToken')
 const { createPhoneCheck } = require('./helpers/createPhoneCheck')
 const { getPhoneCheck } = require('./helpers/getPhoneCheckResult')
-
+const { redisClient } = require('./helpers/redisClient')
 const app = express()
 
 app.use(express.json())
 app.use(cors())
-// initialize Firebase Admin SDK 
+// initialize Firebase Admin SDK
 admin.initializeApp({
   credential: admin.credential.applicationDefault(),
+})
+// save Mobile Client FCM token to Redis
+app.post('/api/token', async (req, res) => {
+  const { from } = req.query
+  const { registrationToken } = req.body
+  if (from === 'mobile') {
+    redisClient.setex('mobileToken', 60 * 60 * 24 * 7, registrationToken)
+
+    return res
+      .status(201)
+      .send({ message: 'successfully added FCM token from mobile to redis' })
+  } else if (from === 'web') {
+    redisClient.setex('webToken', 60 * 60 * 24 * 7, registrationToken)
+
+    return res
+      .status(201)
+      .send({ message: 'successfully added FCM token from web to redis' })
+  }
+
+  res.status(201).send({ message: 'successfully added token to redis' })
 })
 // create PhoneCheck
 app.post('/api/phone-check', async (req, res) => {

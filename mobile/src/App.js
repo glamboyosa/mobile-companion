@@ -22,11 +22,11 @@ const App = () => {
 
   // this function checks if we've stored the Device registration token in async storage and sends it to the server if we don't have.
   const getFCMDeviceToken = async (token = null) => {
-    const registrationToken = await AsyncStorage.getItem('FCMDeviceToken')
-    if (!registrationToken && !token) {
+    const FCMRegistrationToken = await AsyncStorage.getItem('FCMDeviceToken')
+    if (!FCMRegistrationToken && !token) {
       const registrationToken = await messaging().getToken()
       const body = { registrationToken }
-      const response = await fetch(`${baseURL}/api/token`, {
+      const response = await fetch(`${baseURL}/api/token?from=mobile`, {
         method: 'POST',
         body: JSON.stringify(body),
         headers: {
