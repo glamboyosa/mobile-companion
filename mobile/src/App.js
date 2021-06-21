@@ -15,11 +15,25 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import messaging from '@react-native-firebase/messaging'
+
+import Toast from 'react-native-toast-message'
+
+import TruSDK from '@tru_id/tru-sdk-react-native'
 const App = () => {
   const baseURL = ''
   const [phoneNumber, setPhoneNumber] = useState('')
   const [loading, setLoading] = useState(false)
+  // request permission on iOS
+  const requestUserPermission = async () => {
+    const authStatus = await messaging().requestPermission()
+    const enabled =
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL
 
+    if (enabled) {
+      console.log('Authorization status:', authStatus)
+    }
+  }
   // this function checks if we've stored the Device registration token in async storage and sends it to the server if we don't have.
   const getFCMDeviceToken = async (token = null) => {
     const FCMRegistrationToken = await AsyncStorage.getItem('FCMDeviceToken')
@@ -41,40 +55,92 @@ const App = () => {
             onPress: () => console.log('Alert closed'),
           },
         ])
+    } else if (token) {
+      const body = { registrationToken: token }
+      const response = await fetch(`${baseURL}/api/token?from=mobile`, {
+        method: 'POST',
+        body: JSON.stringify(body),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      // if something went wrong, inform the user
+      !response.ok() &&
+        Alert.alert('Something went wrong.', 'Please relaunch app.', [
+          {
+            text: 'Close',
+            onPress: () => console.log('Alert closed'),
+          },
+        ])
     }
   }
+  const onPressHandler = async (checkUrl, checkId, accessToken) => {
+    setLoading(true)
+    // open checkUrl & Ready Result
+    await TruSDK.openCheckUrl(checkUrl)
+
+    // get PhoneCheck Result
+    const response = await fetch(
+      `${baseURL}/api/phone-check?check_id=${checkId}&access_token=${accessToken}`,
+    )
+  }
   useEffect(() => {
+    requestUserPermission()
     getFCMDeviceToken()
     return () =>
       messaging().onTokenRefresh((token) => {
         getFCMDeviceToken(token)
       })
   }, [])
-  const signInHandler = async () => {}
+  // useEffect for handling foreground messages
+  useEffect(() => {
+    const unsubscribe = messaging().onMessage(async (remoteMessage) => {
+      Toast.show({
+        type: 'info',
+        position: 'top',
+        text1: remoteMessage.notification.title,
+        text2: remoteMessage.notification.body,
+        onPress: () =>
+          onPressHandler(
+            remoteMessage.data.checkUrl,
+            remoteMessage.data.checkId,
+            remoteMessage.data.accessToken,
+          ),
+      })
+    })
+
+    return unsubscribe
+  }, [])
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.heading}>Signing In...</Text>
-      <View style={styles.form}>
-        <View>
-          <TextInput
-            style={styles.textInput}
-            placeholder="Number ex. +448023432345"
-            placeholderTextColor="#d3d3d3"
-            keyboardType="phone-pad"
-            value={phoneNumber}
-            editable={!loading}
-            onChangeText={(Value) => setPhoneNumber(Value.replace(/\s+/g, ''))}
-          />
-          {loading ? (
-            <ActivityIndicator size="large" color="#00ff00" />
-          ) : (
-            <TouchableOpacity onPress={signInHandler} style={styles.button}>
-              <Text style={styles.buttonText}>Sign In</Text>
-            </TouchableOpacity>
-          )}
+    <>
+      <View style={styles.container}>
+        <Text style={styles.heading}>Signing In...</Text>
+        <View style={styles.form}>
+          <View>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Number ex. +448023432345"
+              placeholderTextColor="#d3d3d3"
+              keyboardType="phone-pad"
+              value={phoneNumber}
+              editable={!loading}
+              onChangeText={(Value) =>
+                setPhoneNumber(Value.replace(/\s+/g, ''))
+              }
+            />
+            {loading ? (
+              <ActivityIndicator size="large" color="#00ff00" />
+            ) : (
+              <TouchableOpacity style={styles.button}>
+                <Text style={styles.buttonText}>Sign In</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </View>
-    </View>
+      <Toast ref={(ref) => Toast.setRef(ref)} />
+    </>
   )
 }
 

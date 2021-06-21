@@ -15,7 +15,8 @@
     "@react-native-firebase/messaging": "^12.1.0",
     "@tru_id/tru-sdk-react-native": "^0.3.0",
     "react": "17.0.1",
-    "react-native": "0.64.2"
+    "react-native": "0.64.2",
+    "react-native-toast-message": "^1.4.9"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",

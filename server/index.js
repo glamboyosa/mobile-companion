@@ -73,6 +73,7 @@ app.post('/api/phone-check', async (req, res) => {
           phoneNumber,
           checkId,
           checkUrl,
+          accessToken
         },
         notification: {
           title: 'Sign In Attempt.',
