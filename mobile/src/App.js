@@ -83,6 +83,14 @@ const App = () => {
     const response = await fetch(
       `${baseURL}/api/phone-check?check_id=${checkId}&access_token=${accessToken}`,
     )
+
+    !response.ok &&
+      Alert.alert('Something went wrong.', 'Please relaunch app.', [
+        {
+          text: 'Close',
+          onPress: () => console.log('Alert closed'),
+        },
+      ])
   }
   useEffect(() => {
     requestUserPermission()
