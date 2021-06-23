@@ -1,2 +1,3 @@
 const redis = require('redis')
-export const redisClient = redis.createClient(6379)
+const redisClient = redis.createClient(6379)
+exports.redisClient = redisClient

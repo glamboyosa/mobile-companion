@@ -7,22 +7,29 @@ const { promisify } = require('util')
 
 // firebase
 const admin = require('firebase-admin')
+
+// morgan
+const morgan = require('morgan')
+
 // helpers
 const { createAccessToken } = require('./helpers/createAccessToken')
 const { createPhoneCheck } = require('./helpers/createPhoneCheck')
 const { getPhoneCheck } = require('./helpers/getPhoneCheckResult')
 const { redisClient } = require('./helpers/redisClient')
 
-const get = promisify(redisClient.get)
+const get = promisify(redisClient.get).bind(redisClient)
 
 const app = express()
 
 app.use(express.json())
 app.use(cors())
+app.use(morgan('dev'))
+
 // initialize Firebase Admin SDK
 admin.initializeApp({
   credential: admin.credential.applicationDefault(),
 })
+
 // save Mobile Client FCM token to Redis
 app.post('/api/token', async (req, res) => {
   const { from } = req.query
@@ -73,7 +80,7 @@ app.post('/api/phone-check', async (req, res) => {
           phoneNumber,
           checkId,
           checkUrl,
-          accessToken
+          accessToken,
         },
         notification: {
           title: 'Sign In Attempt.',
@@ -84,7 +91,7 @@ app.post('/api/phone-check', async (req, res) => {
 
       const response = await admin.messaging().send(message)
 
-      console.log('Successfully sent message from server', response)
+      console.log('Successfully sent message from server to mobile', response)
     }
     res
       .status(201)
@@ -98,25 +105,28 @@ app.post('/api/phone-check', async (req, res) => {
 
 app.get('/api/phone-check', async (req, res) => {
   // get the `check_id` from the query parameter
-  const { check_id: checkId } = req.query
+  const { check_id: checkId, access_token: accessToken } = req.query
   try {
     // get the PhoneCheck response
-    const { match } = await getPhoneCheck(checkId)
-    if (match) {
-      const webToken = await get('webToken')
+    const { match } = await getPhoneCheck(checkId, accessToken)
+    console.log('match is?')
+    console.log(match)
+    const webToken = await get('webToken')
+    if (webToken) {
       const message = {
         data: {
-          match,
+          match: JSON.stringify(match),
         },
         token: webToken,
       }
-
+      console.log('token is', webToken)
       const response = await admin.messaging().send(message)
 
-      console.log('Successfully sent message from server', response)
+      console.log('Successfully sent message from server to web', response)
     }
     res.status(200).send({ data: { match }, message: 'successful match' })
   } catch (e) {
+    console.log(JSON.stringify(e))
     res.status(400).send({ message: e.message })
   }
 })

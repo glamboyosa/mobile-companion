@@ -1,43 +1,31 @@
-import 'regenerator-runtime/runtime'
+import { form, input } from './helpers/variables.js'
 
-import { form, input } from './helpers/variables'
+import { toggleLoading } from './helpers/loader.js'
 
-import { toggleLoading } from './helpers/loader'
+import { clearForm, successUI } from './views/index.js'
 
-import { clearForm, successUI } from './views/index'
+import { firebaseConfig, vapidKey } from './helpers/config.js'
 
-import Toastify from 'toastify-js'
+import { sendToken } from './helpers/sendToken.js'
 
-import 'toastify-js/src/toastify.css'
-
-import firebase from 'firebase/app'
-
-import { firebaseConfig, vapidKey } from './helpers/config'
-import { sendToken } from './helpers/sendToken'
-
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig)
 
-const baseURL = ''
+const messaging = firebase.messaging()
 
-window.addEventListener('load', async () => {
-  const messaging = firebase.messaging()
-  try {
-    const currentToken = await messaging.getToken({ vapidKey })
+const baseURL = 'https://3fcf42af0c65.ngrok.io'
 
-    if (currentToken) {
-      // we have a token presently so send it to the server
-      await sendToken(baseURL, currentToken)
-    } else {
-      // we do not have permission so request permission
-      const permission = await Notification.requestPermission()
-      if (permission === 'granted') {
-        const currentToken = await messaging.getToken({ vapidKey })
-        await sendToken(baseURL, currentToken)
-      } else {
+messaging
+  .getToken({
+    vapidKey,
+  })
+  .then((currentToken) => {
+    console.log('we already have a token', currentToken)
+    sendToken(baseURL, currentToken)
+      .then(() => {})
+      .catch((err) => {
         Toastify({
-          text: `Couldn't get permission to send token`,
-          duration: 12000,
+          text: `${err.message}`,
+          duration: 3000,
           close: true,
           className: 'toast',
           backgroundColor: '#f00',
@@ -46,20 +34,61 @@ window.addEventListener('load', async () => {
           stopOnFocus: true, // Prevents dismissing of toast on hover
           onClick: function () {}, // Callback after click
         }).showToast()
-      }
-    }
-  } catch (e) {
-    Toastify({
-      text: `${e.message}`,
-      duration: 12000,
-      close: true,
-      className: 'toast',
-      backgroundColor: '#f00',
-      gravity: 'top', // `top` or `bottom`
-      position: 'center', // `left`, `center` or `right`
-      stopOnFocus: true, // Prevents dismissing of toast on hover
-      onClick: function () {}, // Callback after click
-    }).showToast()
+      })
+      .catch((err) => {
+        console.log(JSON.stringify(err))
+        if (err) {
+          Notification.requestPermission().then((permission) => {
+            if (permission === 'granted') {
+              messaging
+                .getToken({
+                  vapidKey,
+                })
+                .then((currentToken) => {
+                  console.log(currentToken)
+                  sendToken(baseURL, currentToken)
+                    .then(() => {})
+                    .catch((err) => {
+                      Toastify({
+                        text: `${err.message}`,
+                        duration: 3000,
+                        close: true,
+                        className: 'toast',
+                        backgroundColor: '#f00',
+                        gravity: 'top', // `top` or `bottom`
+                        position: 'center', // `left`, `center` or `right`
+                        stopOnFocus: true, // Prevents dismissing of toast on hover
+                        onClick: function () {}, // Callback after click
+                      }).showToast()
+                    })
+                })
+            } else {
+              Toastify({
+                text: `Couldn't get permission to send token`,
+                duration: 3000,
+                close: true,
+                className: 'toast',
+                backgroundColor: '#f00',
+                gravity: 'top', // `top` or `bottom`
+                position: 'center', // `left`, `center` or `right`
+                stopOnFocus: true, // Prevents dismissing of toast on hover
+                onClick: function () {}, // Callback after click
+              }).showToast()
+            }
+          })
+        }
+      })
+  })
+
+messaging.onMessage((payload) => {
+  console.log(payload, 'from foreground')
+  // get the match
+  const match = JSON.parse(payload.data.match)
+  if (match) {
+    // if there is a match update the UI
+    clearForm()
+
+    successUI()
   }
 })
 form.addEventListener('submit', async (e) => {
@@ -70,11 +99,23 @@ form.addEventListener('submit', async (e) => {
 
   const body = { phone_number: input.value }
   try {
-    await fetch('', {
+    await fetch(`${baseURL}/api/phone-check`, {
       body: JSON.stringify(body),
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+    })
+    messaging.onMessage((payload) => {
+      console.log(payload, 'from foreground')
+      // get the match
+      const match = JSON.parse(payload.data.match)
+      if (match) {
+        // if there is a match update the UI
+        clearForm()
+
+        successUI()
+      }
     })
   } catch (e) {
     Toastify({

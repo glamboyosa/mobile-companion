@@ -20,7 +20,8 @@ import Toast from 'react-native-toast-message'
 
 import TruSDK from '@tru_id/tru-sdk-react-native'
 const App = () => {
-  const baseURL = ''
+  const baseURL = 'https://3fcf42af0c65.ngrok.io'
+  const [title, setTitle] = useState('Sign In')
   const [phoneNumber, setPhoneNumber] = useState('')
   const [loading, setLoading] = useState(false)
   // request permission on iOS
@@ -48,7 +49,7 @@ const App = () => {
         },
       })
       // if something went wrong, inform the user
-      !response.ok() &&
+      !response.ok &&
         Alert.alert('Something went wrong.', 'Please relaunch app.', [
           {
             text: 'Close',
@@ -65,7 +66,7 @@ const App = () => {
         },
       })
       // if something went wrong, inform the user
-      !response.ok() &&
+      !response.ok &&
         Alert.alert('Something went wrong.', 'Please relaunch app.', [
           {
             text: 'Close',
@@ -76,6 +77,8 @@ const App = () => {
   }
   const onPressHandler = async (checkUrl, checkId, accessToken) => {
     setLoading(true)
+    console.log(checkUrl)
+    console.log(checkId)
     // open checkUrl & Ready Result
     await TruSDK.openCheckUrl(checkUrl)
 
@@ -83,7 +86,7 @@ const App = () => {
     const response = await fetch(
       `${baseURL}/api/phone-check?check_id=${checkId}&access_token=${accessToken}`,
     )
-
+    console.log(response)
     !response.ok &&
       Alert.alert('Something went wrong.', 'Please relaunch app.', [
         {
@@ -91,6 +94,9 @@ const App = () => {
           onPress: () => console.log('Alert closed'),
         },
       ])
+
+    setLoading(false)
+    setTitle('Sign In')
   }
   useEffect(() => {
     requestUserPermission()
@@ -103,6 +109,7 @@ const App = () => {
   // useEffect for handling foreground messages
   useEffect(() => {
     const unsubscribe = messaging().onMessage(async (remoteMessage) => {
+      setTitle('Signing In...')
       Toast.show({
         type: 'info',
         position: 'top',
@@ -123,7 +130,7 @@ const App = () => {
   return (
     <>
       <View style={styles.container}>
-        <Text style={styles.heading}>Signing In...</Text>
+        <Text style={styles.heading}>{title}</Text>
         <View style={styles.form}>
           <View>
             <TextInput

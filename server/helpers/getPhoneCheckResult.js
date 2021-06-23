@@ -12,7 +12,7 @@ exports.getPhoneCheck = async (checkId, accessToken) => {
     },
   )
 
-  const { match } = response.json()
+  const { match } = await response.json()
 
   return { match }
 }
