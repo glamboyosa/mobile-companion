@@ -20,7 +20,7 @@ import Toast from 'react-native-toast-message'
 
 import TruSDK from '@tru_id/tru-sdk-react-native'
 const App = () => {
-  const baseURL = 'https://3fcf42af0c65.ngrok.io'
+  const baseURL = 'https://703260630efa.ngrok.io'
   const [title, setTitle] = useState('Sign In')
   const [phoneNumber, setPhoneNumber] = useState('')
   const [loading, setLoading] = useState(false)
@@ -75,8 +75,15 @@ const App = () => {
         ])
     }
   }
-  const onPressHandler = async (checkUrl, checkId, accessToken) => {
+  const onPressHandler = async (
+    checkUrl,
+    checkId,
+    accessToken,
+    phoneNumber,
+  ) => {
     setLoading(true)
+    setTitle('Signing In')
+    setPhoneNumber(phoneNumber)
     console.log(checkUrl)
     console.log(checkId)
     // open checkUrl & Ready Result
@@ -120,6 +127,7 @@ const App = () => {
             remoteMessage.data.checkUrl,
             remoteMessage.data.checkId,
             remoteMessage.data.accessToken,
+            remoteMessage.data.phoneNumber,
           ),
       })
     })

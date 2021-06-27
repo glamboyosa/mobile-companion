@@ -12,7 +12,7 @@ firebase.initializeApp(firebaseConfig)
 
 const messaging = firebase.messaging()
 
-const baseURL = 'https://3fcf42af0c65.ngrok.io'
+const baseURL = 'https://703260630efa.ngrok.io'
 
 messaging
   .getToken({
@@ -89,6 +89,18 @@ messaging.onMessage((payload) => {
     clearForm()
 
     successUI()
+  } else {
+    Toastify({
+      text: `Failed to verify you. Please contact your network provider.`,
+      duration: 12000,
+      close: true,
+      className: 'toast',
+      backgroundColor: '#f00',
+      gravity: 'top', // `top` or `bottom`
+      position: 'center', // `left`, `center` or `right`
+      stopOnFocus: true, // Prevents dismissing of toast on hover
+      onClick: function () {}, // Callback after click
+    }).showToast()
   }
 })
 form.addEventListener('submit', async (e) => {
@@ -99,25 +111,30 @@ form.addEventListener('submit', async (e) => {
 
   const body = { phone_number: input.value }
   try {
-    await fetch(`${baseURL}/api/phone-check`, {
+    const response = await fetch(`${baseURL}/api/phone-check`, {
       body: JSON.stringify(body),
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
     })
-    messaging.onMessage((payload) => {
-      console.log(payload, 'from foreground')
-      // get the match
-      const match = JSON.parse(payload.data.match)
-      if (match) {
-        // if there is a match update the UI
-        clearForm()
 
-        successUI()
-      }
-    })
+    if (!response.ok) {
+      toggleLoading(false)
+      Toastify({
+        text: `MNO not supported`,
+        duration: 12000,
+        close: true,
+        className: 'toast',
+        backgroundColor: '#f00',
+        gravity: 'top', // `top` or `bottom`
+        position: 'center', // `left`, `center` or `right`
+        stopOnFocus: true, // Prevents dismissing of toast on hover
+        onClick: function () {}, // Callback after click
+      }).showToast()
+    }
   } catch (e) {
+    console.log(JSON.stringify(e))
     Toastify({
       text: `${e.message}`,
       duration: 12000,

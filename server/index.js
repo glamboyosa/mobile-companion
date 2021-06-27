@@ -64,7 +64,7 @@ app.post('/api/phone-check', async (req, res) => {
       phoneNumber,
       accessToken,
     )
-
+    console.log(numberSupported)
     if (!numberSupported) {
       res.status(400).send({ message: 'number not supported' })
 
@@ -97,6 +97,7 @@ app.post('/api/phone-check', async (req, res) => {
       .status(201)
       .send({ data: { checkId, checkUrl }, message: 'PhoneCheck created' })
   } catch (e) {
+    console.log(JSON.stringify(e))
     res.status(400).send({ message: e.message })
   }
 })
