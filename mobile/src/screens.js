@@ -22,6 +22,8 @@ import messaging from '@react-native-firebase/messaging'
 
 import Toast from 'react-native-toast-message'
 
+import DeviceInfo from 'react-native-device-info'
+
 import TruSDK from '@tru_id/tru-sdk-react-native'
 
 const Screens = () => {
@@ -52,11 +54,15 @@ const Screens = () => {
     }
   }
   // this function checks if we've stored the Device registration token in async storage and sends it to the server if we don't have.
-  const getFCMDeviceToken = async (token = null) => {
+  const getFCMDeviceToken = async (token = null, deviceId) => {
     const FCMRegistrationToken = await AsyncStorage.getItem('FCMDeviceToken')
     if (!FCMRegistrationToken && !token) {
       const registrationToken = await messaging().getToken()
-      const body = { registrationToken, phone_number: phoneNumber }
+      const body = {
+        fcm_token: registrationToken,
+        phone_number: phoneNumber,
+        device_id: deviceId,
+      }
       const response = await fetch(`${base_url}/api/tokens`, {
         method: 'POST',
         body: JSON.stringify(body),
@@ -71,7 +77,11 @@ const Screens = () => {
           message: 'Please relaunch app.',
         })
     } else if (token) {
-      const body = { registrationToken: token, phone_number: phoneNumber }
+      const body = {
+        fcm_token: token,
+        phone_number: phoneNumber,
+        device_id: deviceId,
+      }
       const response = await fetch(`${base_url}/api/tokens`, {
         method: 'POST',
         body: JSON.stringify(body),
@@ -139,12 +149,13 @@ const Screens = () => {
   }, [])
   // useEffect for getting FCM token
   useEffect(() => {
+    const deviceId = DeviceInfo.getUniqueId()
     if (screen === 'login') {
-      getFCMDeviceToken()
+      getFCMDeviceToken(null, deviceId)
     }
     return () =>
       messaging().onTokenRefresh((token) => {
-        getFCMDeviceToken(token)
+        getFCMDeviceToken(token, deviceId)
       })
   }, [screen])
   // useEffect for handling foreground messages
