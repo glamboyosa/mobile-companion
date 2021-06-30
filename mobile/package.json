@@ -16,6 +16,7 @@
     "@tru_id/tru-sdk-react-native": "^0.3.0",
     "react": "17.0.1",
     "react-native": "0.64.2",
+    "react-native-linear-gradient": "^2.5.6",
     "react-native-toast-message": "^1.4.9"
   },
   "devDependencies": {
