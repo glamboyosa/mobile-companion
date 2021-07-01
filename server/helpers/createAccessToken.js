@@ -1,12 +1,15 @@
-const btoa = require('btoa')
 const fetch = require('node-fetch')
-require('dotenv').config()
+const path = require('path')
 exports.createAccessToken = async () => {
   // make request body acceptable by application/x-www-form-urlencoded
-  const clientID = process.env.TRU_ID_CLIENT
-  const clientSecret = process.env.TRU_ID_SECRET
+  const truIdConfig = path.join(__dirname, '../../tru.json')
+  const clientId = truIdConfig.credentials[0].client_id
+  const clientSecret = truIdConfig.credentials[0].client_secret
 
-  const basicAuth = btoa(`${clientID}:${clientSecret}`)
+  const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString(
+    'base64',
+  )
+
   const resp = await fetch(`https://eu.api.tru.id/oauth2/v1/token`, {
     method: 'POST',
     body: 'grant_type=client_credentials&scope=phone_check',

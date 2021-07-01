@@ -30,7 +30,7 @@ const Screens = () => {
   // server ngrok url
   const base_url = 'https://2cb3d5b5d0a2.ngrok.io'
   const { screen, setScreen } = useContext(AuthContext)
-  const [title, setTitle] = useState('Login')
+  const [title, setTitle] = useState('Home 🏡')
   const [phoneNumber, setPhoneNumber] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -138,11 +138,74 @@ const Screens = () => {
       }
     } catch (e) {
       setLoading(false)
+
       errorHandler({ title: 'Something went wrong', message: e.message })
     }
   }
 
-  const loginHandler = () => {}
+  const approvedHandler = async (loginId) => {
+    // user approved login so send patch request informing the server
+    const body = { value: 'APPROVED' }
+    try {
+      const response = await fetch(`${base_url}/api/login/${loginId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(body),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const data = await response.json()
+
+      // open check URL
+      await TruSDK.openCheckUrl(data.data.check_url)
+      // successfully opened Check URL so send PATCH request informing the server that a match is pending
+
+      await fetch(`${base_url}/api/login/${loginId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ value: 'MATCH_PENDING' }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+    } catch (e) {
+      errorHandler({
+        title: 'Something went wrong',
+        message: 'Please relaunch app.',
+      })
+    }
+  }
+  const deniedHandler = async (loginId) => {
+    const body = { value: 'DENIED' }
+
+    const response = await fetch(`${base_url}/api/login/${loginId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    // if something went wrong, inform the user
+    !response.ok &&
+      errorHandler({
+        title: 'Something went wrong',
+        message: 'Please relaunch app.',
+      })
+  }
+  const notificationHandler = (loginId) => {
+    return Alert.alert(title, message, [
+      {
+        text: 'Approve',
+        onPress: () => approvedHandler(loginId),
+      },
+      {
+        text: 'Deny',
+        onPress: () => deniedHandler(loginId),
+      },
+    ])
+  }
+
   // useEffect for requesting permission on iOS
   useEffect(() => {
     requestUserPermission()
@@ -150,9 +213,11 @@ const Screens = () => {
   // useEffect for getting FCM token
   useEffect(() => {
     const deviceId = DeviceInfo.getUniqueId()
+
     if (screen === 'login') {
       getFCMDeviceToken(null, deviceId)
     }
+
     return () =>
       messaging().onTokenRefresh((token) => {
         getFCMDeviceToken(token, deviceId)
@@ -162,17 +227,13 @@ const Screens = () => {
   useEffect(() => {
     const unsubscribe = messaging().onMessage(async (remoteMessage) => {
       setTitle('Signing In...')
+
       Toast.show({
         type: 'info',
         position: 'top',
         text1: remoteMessage.notification.title,
         text2: remoteMessage.notification.body,
-        onPress: () =>
-          onPressHandler(
-            remoteMessage.data.checkUrl,
-            remoteMessage.data.checkId,
-            remoteMessage.data.phoneNumber,
-          ),
+        onPress: () => notificationHandler(remoteMessage.data.login_id),
       })
     })
 
@@ -219,24 +280,6 @@ const Screens = () => {
           <SafeAreaView style={styles.container}>
             <View style={styles.box}>
               <Text style={styles.heading}>{title}</Text>
-              <TextInput
-                style={styles.textInput}
-                placeholder="Number ex. +448023432345"
-                placeholderTextColor="#d3d3d3"
-                keyboardType="phone-pad"
-                value={phoneNumber}
-                editable={!loading}
-                onChangeText={(value) =>
-                  setPhoneNumber(value.replace(/\s+/g, ''))
-                }
-              />
-              {loading ? (
-                <ActivityIndicator size="large" color="#00ff00" />
-              ) : (
-                <TouchableOpacity onPress={loginHandler} style={styles.button}>
-                  <Text style={styles.buttonText}>Login</Text>
-                </TouchableOpacity>
-              )}
             </View>
           </SafeAreaView>
         )}
@@ -298,5 +341,5 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 })
-
+export { notificationHandler }
 export default Screens

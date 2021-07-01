@@ -5,9 +5,9 @@ function poll(fn, timeout, interval) {
 
   const checkCondition = (resolve, reject) => {
     let ajax = fn()
-    ajax.then((response) => {
-      if (response.statusText === 'OK') {
-        resolve(response.data)
+    ajax.then((data) => {
+      if (data) {
+        resolve(data.data)
       } else if (Number(new Date()) < endTime) {
         setTimeout(checkCondition, interval, resolve, reject)
       } else {
