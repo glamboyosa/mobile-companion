@@ -11,6 +11,7 @@ const admin = require('firebase-admin')
 // morgan
 const morgan = require('morgan')
 
+const path = require('path')
 // helpers
 const { createAccessToken } = require('./helpers/createAccessToken')
 const { createPhoneCheck } = require('./helpers/createPhoneCheck')
@@ -30,8 +31,7 @@ app.use(morgan('dev'))
 admin.initializeApp({
   credential: admin.credential.applicationDefault(),
 })
-// global access token variable
-let AccessToken
+
 // save Mobile Client FCM token, phone number & device id to Redis
 app.post('/api/tokens', async (req, res) => {
   const { fcm_token, phone_number, device_id } = req.body
@@ -39,6 +39,27 @@ app.post('/api/tokens', async (req, res) => {
   // check if there is a mobile token
   if (users) {
     const oldUsers = JSON.parse(users)
+    // check if we have a user with that phone number, get it and also filter out the existing user from or array
+    // POINT BEING THE USER WANTS TO RE-REGISTER WITH THE SAME PHONE NUMBER
+    const existingUser = oldUsers.find((el) => el.phone_number === phone_number)
+    const updatedUsers = oldUsers.filter(
+      (el) => el.phone_number !== phone_number,
+    )
+    // check if we have users, if we do, update the fcm_token and device_id
+    if (existingUser) {
+      existingUser.fcm_token = fcm_token
+      existingUser.device_id = device_id
+
+      // add the updated user back and set the users to redis
+
+      updatedUsers.push(existingUser)
+
+      return redisClient.setex(
+        'users',
+        60 * 60 * 24 * 7,
+        JSON.stringify(updatedUsers),
+      )
+    }
     const userProperties = {
       fcm_token,
       phone_number,
@@ -73,13 +94,9 @@ app.post('/api/tokens', async (req, res) => {
 app.post('/api/register', async (req, res) => {
   const { phone_number: phoneNumber } = req.body
 
-  // create access token
-  const accessToken = await createAccessToken()
-
-  // store access token to global variable
-  AccessToken = accessToken
-
   try {
+    // create access token
+    const accessToken = await createAccessToken()
     // create PhoneCheck resource
 
     const { checkId, checkUrl, numberSupported } = await createPhoneCheck(
@@ -107,16 +124,14 @@ app.get('/api/register', async (req, res) => {
   // get the `check_id` from the query parameter
   const { check_id: checkId } = req.query
 
-  if (!AccessToken) {
-    res.status(400).send({ message: 'No Access Token Found' })
-    return
-  }
   try {
+    // create access token
+    const accessToken = await createAccessToken()
     // get the PhoneCheck response
-    const { match } = await getPhoneCheck(checkId, AccessToken)
+    const { match } = await getPhoneCheck(checkId, accessToken)
 
     console.log(match)
-    res.status(200).send({ data: { match }, message: 'successful match' })
+    res.status(200).send({ data: { match } })
   } catch (e) {
     console.log(JSON.stringify(e))
     res.status(400).send({ message: e.message })
@@ -172,44 +187,71 @@ app.get('/api/login/:login_id', async (req, res) => {
     const currentUsers = JSON.parse(users)
 
     const user = currentUsers.find((el) => el.login_id === login_id)
-
-    if (poll_count === 1) {
-      if (user.login_id) {
-        const message = {
-          data: {
-            phone_number: user.phone_number,
-            login_id: user.login_id,
-          },
-          notification: {
-            title: 'Sign In Attempt.',
-            body: 'Open to sign in.',
-          },
-          token: user.fcm_token,
-        }
-        const response = await admin.messaging().send(message)
-
-        console.log(
-          'Sent push notification to',
-          user.device_id,
-          'containing',
-          response,
-        )
+    console.log(user)
+    if (poll_count === '1' && user.login_id) {
+      const message = {
+        data: {
+          phone_number: user.phone_number,
+          login_id: user.login_id,
+        },
+        notification: {
+          title: 'Sign In Attempt.',
+          body: 'Open to sign in.',
+        },
+        token: user.fcm_token,
       }
+      const response = await admin.messaging().send(message)
+
+      console.log(
+        'Sent push notification to',
+        user.device_id,
+        'containing',
+        response,
+      )
+    }
+    // if the check_status` === "MATCH_SUCCESSFUL" return the user. Needed so the polling function does not continually call our helpers
+    if (user.check_status === 'MATCH_SUCCESS') {
+      res.status(200).send({ data: user })
+      return
+    } else if (user.check_status === 'MATCH_FAILED') {
+      res.status(200).send({ data: user })
+      return
     }
     // IF `check_status` === "MATCH_PENDING". Get the PhoneCheck response
-    if (user.check_status === 'MATCH_PENDING') {
-      if (!AccessToken) {
-        res.status(400).send({ message: 'No Access Token Found' })
-        return
-      }
+    else if (user.check_status === 'MATCH_PENDING') {
+      // create access token
+      const accessToken = await createAccessToken()
       // get the PhoneCheck response
-      const { match } = await getPhoneCheck(user.check_id, AccessToken)
+      const { match } = await getPhoneCheck(user.check_id, accessToken)
 
       if (match) {
+        const updatedUsers = currentUsers.map((el) => {
+          if (el.login_id === login_id) {
+            el.check_status = 'MATCH_SUCCESS'
+          }
+          return el
+        })
+        redisClient.setex(
+          'users',
+          60 * 60 * 24 * 7,
+          JSON.stringify(updatedUsers),
+        )
+
         const result = { ...user, check_status: 'MATCH_SUCCESS' }
         res.status(200).send({ data: result })
         return
       } else {
+        const updatedUsers = currentUsers.map((el) => {
+          if (el.login_id === login_id) {
+            el.check_status = 'MATCH_FAILED'
+          }
+          return el
+        })
+        redisClient.setex(
+          'users',
+          60 * 60 * 24 * 7,
+          JSON.stringify(updatedUsers),
+        )
         const result = { ...user, check_status: 'MATCH_FAILED' }
         res.status(200).send({ data: result })
         return
@@ -227,7 +269,7 @@ app.get('/api/login/:login_id', async (req, res) => {
     }
     res.status(200).send({ data: result })
   } catch (e) {
-    res.status(400).send({ message: e.message })
+    res.status(500).send({ message: e.message })
   }
 })
 app.patch('/api/login/:login_id', async (req, res) => {
@@ -237,9 +279,6 @@ app.patch('/api/login/:login_id', async (req, res) => {
     if (value === 'APPROVED') {
       // create access token
       const accessToken = await createAccessToken()
-
-      // store access token to global variable
-      AccessToken = accessToken
 
       const users = await get('users')
 
@@ -322,7 +361,9 @@ app.patch('/api/login/:login_id', async (req, res) => {
         },
       })
     }
-  } catch (e) {}
+  } catch (e) {
+    res.status(500).send({ message: e.message })
+  }
 })
 
 // setup server

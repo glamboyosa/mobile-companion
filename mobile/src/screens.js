@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useState, useEffect } from 'react'
 
 import {
   SafeAreaView,
@@ -28,7 +28,7 @@ import TruSDK from '@tru_id/tru-sdk-react-native'
 
 const Screens = () => {
   // server ngrok url
-  const base_url = 'https://2cb3d5b5d0a2.ngrok.io'
+  const base_url = 'https://17a8102d7eb3.ngrok.io'
   const { screen, setScreen } = useContext(AuthContext)
   const [title, setTitle] = useState('Home 🏡')
   const [phoneNumber, setPhoneNumber] = useState('')
@@ -168,6 +168,7 @@ const Screens = () => {
           'Content-Type': 'application/json',
         },
       })
+      setTitle('Home 🏡')
     } catch (e) {
       errorHandler({
         title: 'Something went wrong',
@@ -192,18 +193,23 @@ const Screens = () => {
         title: 'Something went wrong',
         message: 'Please relaunch app.',
       })
+    setTitle('Home 🏡')
   }
   const notificationHandler = (loginId) => {
-    return Alert.alert(title, message, [
-      {
-        text: 'Approve',
-        onPress: () => approvedHandler(loginId),
-      },
-      {
-        text: 'Deny',
-        onPress: () => deniedHandler(loginId),
-      },
-    ])
+    return Alert.alert(
+      'Login Attempt Initiated',
+      "Someone is attempting to login, please confirm it's you.",
+      [
+        {
+          text: 'Approve',
+          onPress: () => approvedHandler(loginId),
+        },
+        {
+          text: 'Deny',
+          onPress: () => deniedHandler(loginId),
+        },
+      ],
+    )
   }
 
   // useEffect for requesting permission on iOS
@@ -341,5 +347,5 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 })
-export { notificationHandler }
+
 export default Screens
