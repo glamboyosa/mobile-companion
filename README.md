@@ -37,10 +37,8 @@ Install the **tru.ID** CLI [development server plugin](https://github.com/tru-ID
 Create a new project via:
 
 ```bash
-tru projects:create passwordless-auth-web --project-dir .
+tru projects:create mobile-companion --project-dir .
 ```
-
-
 
 ## Starting Project
 
@@ -93,7 +91,6 @@ npm run android
 #or
 npm run ios
 ```
-
 
 ## References
 

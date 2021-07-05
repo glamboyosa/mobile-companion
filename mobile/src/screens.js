@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react'
+import React, { useContext, useState } from 'react'
 
 import {
   SafeAreaView,
@@ -16,19 +16,13 @@ import LinearGradient from 'react-native-linear-gradient'
 
 import { AuthContext } from './context'
 
-import AsyncStorage from '@react-native-async-storage/async-storage'
-
-import messaging from '@react-native-firebase/messaging'
-
 import Toast from 'react-native-toast-message'
-
-import DeviceInfo from 'react-native-device-info'
 
 import TruSDK from '@tru_id/tru-sdk-react-native'
 
 const Screens = () => {
   // server ngrok url
-  const base_url = 'https://17a8102d7eb3.ngrok.io'
+  const base_url = 'https://ngrokurl.ngrok.io'
   const { screen, setScreen } = useContext(AuthContext)
   const [title, setTitle] = useState('Home 🏡')
   const [phoneNumber, setPhoneNumber] = useState('')
@@ -42,61 +36,7 @@ const Screens = () => {
       },
     ])
   }
-  // request permission on iOS
-  const requestUserPermission = async () => {
-    const authStatus = await messaging().requestPermission()
-    const enabled =
-      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-      authStatus === messaging.AuthorizationStatus.PROVISIONAL
 
-    if (enabled) {
-      console.log('Authorization status:', authStatus)
-    }
-  }
-  // this function checks if we've stored the Device registration token in async storage and sends it to the server if we don't have.
-  const getFCMDeviceToken = async (token = null, deviceId) => {
-    const FCMRegistrationToken = await AsyncStorage.getItem('FCMDeviceToken')
-    if (!FCMRegistrationToken && !token) {
-      const registrationToken = await messaging().getToken()
-      const body = {
-        fcm_token: registrationToken,
-        phone_number: phoneNumber,
-        device_id: deviceId,
-      }
-      const response = await fetch(`${base_url}/api/tokens`, {
-        method: 'POST',
-        body: JSON.stringify(body),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      // if something went wrong, inform the user
-      !response.ok &&
-        errorHandler({
-          title: 'Something went wrong',
-          message: 'Please relaunch app.',
-        })
-    } else if (token) {
-      const body = {
-        fcm_token: token,
-        phone_number: phoneNumber,
-        device_id: deviceId,
-      }
-      const response = await fetch(`${base_url}/api/tokens`, {
-        method: 'POST',
-        body: JSON.stringify(body),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      // if something went wrong, inform the user
-      !response.ok &&
-        errorHandler({
-          title: 'Something went wrong',
-          message: 'Please relaunch app.',
-        })
-    }
-  }
   const registerHandler = async () => {
     const body = { phone_number: phoneNumber }
 
@@ -143,108 +83,6 @@ const Screens = () => {
     }
   }
 
-  const approvedHandler = async (loginId) => {
-    // user approved login so send patch request informing the server
-    const body = { value: 'APPROVED' }
-    try {
-      const response = await fetch(`${base_url}/api/login/${loginId}`, {
-        method: 'PATCH',
-        body: JSON.stringify(body),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      const data = await response.json()
-
-      // open check URL
-      await TruSDK.openCheckUrl(data.data.check_url)
-      // successfully opened Check URL so send PATCH request informing the server that a match is pending
-
-      await fetch(`${base_url}/api/login/${loginId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ value: 'MATCH_PENDING' }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      setTitle('Home 🏡')
-    } catch (e) {
-      errorHandler({
-        title: 'Something went wrong',
-        message: 'Please relaunch app.',
-      })
-    }
-  }
-  const deniedHandler = async (loginId) => {
-    const body = { value: 'DENIED' }
-
-    const response = await fetch(`${base_url}/api/login/${loginId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(body),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-
-    // if something went wrong, inform the user
-    !response.ok &&
-      errorHandler({
-        title: 'Something went wrong',
-        message: 'Please relaunch app.',
-      })
-    setTitle('Home 🏡')
-  }
-  const notificationHandler = (loginId) => {
-    return Alert.alert(
-      'Login Attempt Initiated',
-      "Someone is attempting to login, please confirm it's you.",
-      [
-        {
-          text: 'Approve',
-          onPress: () => approvedHandler(loginId),
-        },
-        {
-          text: 'Deny',
-          onPress: () => deniedHandler(loginId),
-        },
-      ],
-    )
-  }
-
-  // useEffect for requesting permission on iOS
-  useEffect(() => {
-    requestUserPermission()
-  }, [])
-  // useEffect for getting FCM token
-  useEffect(() => {
-    const deviceId = DeviceInfo.getUniqueId()
-
-    if (screen === 'login') {
-      getFCMDeviceToken(null, deviceId)
-    }
-
-    return () =>
-      messaging().onTokenRefresh((token) => {
-        getFCMDeviceToken(token, deviceId)
-      })
-  }, [screen])
-  // useEffect for handling foreground messages
-  useEffect(() => {
-    const unsubscribe = messaging().onMessage(async (remoteMessage) => {
-      setTitle('Signing In...')
-
-      Toast.show({
-        type: 'info',
-        position: 'top',
-        text1: remoteMessage.notification.title,
-        text2: remoteMessage.notification.body,
-        onPress: () => notificationHandler(remoteMessage.data.login_id),
-      })
-    })
-
-    return unsubscribe
-  }, [])
   return (
     <>
       <LinearGradient

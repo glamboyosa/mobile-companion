@@ -1,5 +1,8 @@
 const fetch = require('node-fetch')
-exports.createPhoneCheck = async (phoneNumber, accessToken) => {
+const {createAccessToken} = require('./createAccessToken')
+exports.createPhoneCheck = async (phoneNumber) => {
+     // create access token
+     const accessToken = await createAccessToken()
   let checkUrl
   let checkId
   let numberSupported = true
