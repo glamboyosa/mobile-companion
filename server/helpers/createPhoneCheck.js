@@ -3,6 +3,7 @@ const {createAccessToken} = require('./createAccessToken')
 exports.createPhoneCheck = async (phoneNumber) => {
      // create access token
      const accessToken = await createAccessToken()
+     
   let checkUrl
   let checkId
   let numberSupported = true
@@ -22,6 +23,7 @@ exports.createPhoneCheck = async (phoneNumber) => {
 
   if (response.status === 201) {
     const data = await response.json()
+    
     console.log(data)
 
     checkUrl = data._links.check_url.href
