@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@200;300;400;500;700&family=Inter:wght@200;300;400&display=swap');
 :root {
   --black: #000;
   --white: #fff;
@@ -15,7 +15,7 @@ html {
 body {
   box-sizing: border-box;
   flex-direction: column;
-  font-family: 'Quicksand', sans-serif;
+  font-family: 'Inter', sans-serif;
   display: flex;
   justify-content: center;
   height: 100vh;
@@ -51,6 +51,8 @@ body {
   font-size: 4rem;
   font-weight: bold;
   margin-bottom: 2rem;
+  font-family: 'Bai Jamjuree', sans-serif;
+  font-weight: bold;
 }
 .input {
   padding: 1rem 3rem;
@@ -58,6 +60,7 @@ body {
   border-radius: 3px;
   box-shadow: 0 1.2px 1.2px 1.2px var(--black);
   outline: none;
+  font-family: inherit;
 }
 .submit-button {
   padding: 1rem 3rem;
