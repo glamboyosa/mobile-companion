@@ -1,8 +1,8 @@
 const fetch = require('node-fetch')
 const {createAccessToken} = require('./createAccessToken')
 exports.createPhoneCheck = async (phoneNumber) => {
-     // create access token
-     const accessToken = await createAccessToken()
+  // create access token
+  const accessToken = await createAccessToken()
      
   let checkUrl
   let checkId
@@ -37,5 +37,6 @@ exports.createPhoneCheck = async (phoneNumber) => {
       response.toString(),
     )
   }
+
   return { checkId, checkUrl, numberSupported }
 }

@@ -15,13 +15,12 @@ app.use(express.json())
 app.use(cors())
 app.use(morgan('dev'))
 
-// create PhoneCheck
+// Create PhoneCheck
 app.post('/api/register', async (req, res) => {
   const { phone_number: phoneNumber } = req.body
 
   try {
-    // create PhoneCheck resource
-
+    // Create PhoneCheck resource
     const { checkId, checkUrl, numberSupported } = await createPhoneCheck(
       phoneNumber,
     )
@@ -31,6 +30,7 @@ app.post('/api/register', async (req, res) => {
 
       return
     }
+
     res.status(201).send({
       data: { checkId, checkUrl },
       message: 'PhoneCheck created',
@@ -40,14 +40,13 @@ app.post('/api/register', async (req, res) => {
   }
 })
 
-// get PhoneCheck response
-
+// Get PhoneCheck response
 app.get('/api/register', async (req, res) => {
-  // get the `check_id` from the query parameter
+  // Get the `check_id` from the query parameter
   const { check_id: checkId } = req.query
 
   try {
-    // get the PhoneCheck response
+    // Get the PhoneCheck response
     const { match } = await getPhoneCheck(checkId)
 
     console.log(match)
@@ -60,13 +59,12 @@ app.get('/api/register', async (req, res) => {
 
 app.post('/api/login', async (req, res) => {})
 
-// get PhoneCheck response
-
+// Get PhoneCheck response
 app.get('/api/login/:login_id', async (req, res) => {})
 
 app.patch('/api/login/:login_id', async (req, res) => {})
 
-// setup server
+// Setup server
 app.listen(4000, () => {
   console.log('listening on PORT 4000')
 })

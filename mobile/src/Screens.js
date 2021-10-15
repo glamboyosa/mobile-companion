@@ -57,8 +57,8 @@ const Screens = () => {
       const data = await response.json()
 
       console.log(data)
-      // open Check URL
 
+      // open Check URL
       await TruSDK.openCheckUrl(data.data.checkUrl)
 
       const resp = await fetch(
@@ -86,7 +86,7 @@ const Screens = () => {
 
   return (
     <>
-        <LinearGradient
+      <LinearGradient
         colors={['rgba(25, 85, 255, 40)', 'rgba(10, 10, 50, 66)']}
         useAngle={true}
         angle={0}
