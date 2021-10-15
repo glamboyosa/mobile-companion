@@ -15,7 +15,7 @@ import {
 
 import LinearGradient from 'react-native-linear-gradient'
 
-import { AuthContext } from './context'
+import { AuthContext } from './Context'
 
 import Toast from 'react-native-toast-message'
 
@@ -99,7 +99,7 @@ const Screens = () => {
             <View style={styles.box}>
                 <Image
                 style={styles.logo}
-                source={require('../images/tru-logo.png')}
+                source={require('./images/tru-logo.png')}
               />
               <Text style={styles.heading}>Register</Text>
               <TextInput
