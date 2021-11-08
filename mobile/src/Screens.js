@@ -69,7 +69,7 @@ const Screens = () => {
       const data = await response.json()
 
       // open check URL
-      await TruSDK.openCheckUrl(data.data.check_url)
+      await TruSDK.check(data.data.check_url)
       // successfully opened Check URL so send PATCH request informing the server that a match is pending
 
       await fetch(`${base_url}/api/login/${loginId}`, {
@@ -233,7 +233,7 @@ const Screens = () => {
       console.log(data)
 
       // open Check URL
-      await TruSDK.openCheckUrl(data.data.checkUrl)
+      await TruSDK.check(data.data.checkUrl)
 
       const resp = await fetch(
         `${base_url}/api/register?check_id=${data.data.checkId}`,
