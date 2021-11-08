@@ -280,7 +280,6 @@ const Screens = () => {
                 style={styles.textInput}
                 placeholder="Number ex. +448023432345"
                 placeholderTextColor="#d3d3d3"
-                keyboardType="phone-pad"
                 value={phoneNumber}
                 editable={!loading}
                 onChangeText={(value) =>
